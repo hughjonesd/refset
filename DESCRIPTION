@@ -1,9 +1,13 @@
-Package: perspective
+Package: refset
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: Subsets with Reference Semantics
+Version: 0.1
 Date: 2014-11-20
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: David Hugh-Jones <davidhughjones@gmail.com>
+Maintainer: David Hugh-Jones <davidhughjones@gmail.com>
+Description: Provides subsets with reference semantics, i.e. subsets
+  which automatically reflect changes in the original object, and which
+  optionally update the original object when they are changed.
+License: GPL-2
+NeedsCompilation: no
+VignetteBuilder: knitr
