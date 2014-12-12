@@ -8,6 +8,8 @@
 # calculated columns? somewhat like data.table?
 # dfr <- data.frame(a=1:4, b=1:4)
 # refset(rs, dfr, x=a+2*b)
+# this basically works already:
+# refset(rs, transform(dfr, x=a+2*b))
 
 #' Create a reference to a subset of an object
 #' 
@@ -19,7 +21,7 @@
 #' @param x unquoted name of the refset to create
 #' @param data the object to refer to
 #' @param ... indices to subset with
-#' @param drop passed to \code{\link[=Extract]{[}}
+#' @param drop passed to \code{\link{Extract}}
 #' @param dyn.idx update indices dynamically
 #' @param read.only create a read-only refset which throws an error if assigned
 #'        to
@@ -36,7 +38,7 @@
 #' however.
 #' 
 #' Empty arguments in \code{...} are allowed and are treated as indexing 
-#' the whole dimension, just as in \code{\link[=Extract]{[}}.
+#' the whole dimension, just as in \code{\link{Extract}}.
 #' 
 #' By default, the indices in subset are updated dynamically. 
 #' For example, if you call \code{refset(myref, mydata, x >= 3,)} and then
@@ -45,11 +47,15 @@
 #' subset of your object, use \code{dyn.idx=FALSE}.
 #' 
 #' 
-#' @return Nothing is returned, but the \code{x} argument will be assigned to
-#'   in the calling environment (or in \code{env} if that is specified).
+#' @return \code{refset} returns \code{NULL}, but the \code{x} argument 
+#' will be assigned to
+#' in the calling environment (or in \code{env}, if it is specified). 
+#' \code{x} will have an attribute \code{".refset."}.
+#' \code{is.refset} returns \code{TRUE} or \code{FALSE}.
 #' 
 #' @seealso
-#' Refsets are implemented using \code{makeActiveBinding}
+#' Refsets are implemented using \code{makeActiveBinding}.
+#' 
 #' @examples
 #' dfr <- data.frame(a=1:4, b=1:4)
 #' ss <- dfr[1:2,]
@@ -84,12 +90,28 @@
 #' big <- big * 2 # throws an error
 #' }
 #'
+#' # Using refset with other functions:
+#' # dynamically updated calculated column
+#' dfr <- data.frame(a=rnorm(10), b=rnorm(10))
+#' refset(rs, transform(dfr, x=a+2*b+rnorm(10)))
+#' rs
+#' rs # different
+#' 
+#' # Non-readonly refset with other functions. Works but gives a warning:
+#' dontrun{
+#' vec <- 1:5
+#' refset(ssv, names(vec), read.only=FALSE)
+#' ssv <- LETTERS[1:5]
+#' vec
+#' }
+#' 
 ## the below is not yet true :-( 
 ## Works nicely with magrittr or dplyr:
 # \dontrun{
 # a %>% refset(mydata[1:3,1:4])
 # }
 #
+#' @export
 refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
       env=parent.frame()) {
   
@@ -108,14 +130,25 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     rdata <- data
     data <- substitute(data)  
   }
+  x <- deparse(substitute(x))
   assignargs <- list("["="[<-", "[["="[[<-", "$"="$<-")
   assignarg <- assignargs[[ssarg]]
+  if (is.null(assignarg)) {
+    if (! missing(read.only) && ! read.only) {
+      assignarg <- paste0(ssarg, "<-") 
+      warning("Using read.only=FALSE with a non-standard argument of ", 
+            sQuote(assignarg), ", assigning to ", sQuote(x), 
+            " may cause unexpected behaviour.")
+    } else {
+      read.only <- TRUE
+    }
+  }
   missings <- sapply(dots, function(x) is.symbol(x) && identical(
         as.character(x), ""))
+  if (length(missings)==0) missings <- logical(0)
   # use argument recycling (of TRUE) as a substitute for non-standard eval:
   dots[missings] <- if (dyn.idx) TRUE else lapply(dim(rdata)[missings], seq, 
         from=1)
-  x <- deparse(substitute(x))
   isdfr <- is.data.frame(rdata)
   idxval <- if (dyn.idx) {
     eval(substitute(substitute(dots)), env) 
@@ -131,7 +164,9 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     if (missing(v)) {
       args <- c(data, idxval)
       if (length(idxval) > 1) args <- c(args, drop=drop)
-      do.call(ssarg, args, envir=env)
+      res <- do.call(ssarg, args, envir=env)
+      if (! is.null(res)) attr(res, ".refset.") <- TRUE
+      res
     } else {
       if (read.only) stop("Tried to assign to a readonly refset")
       do.call("<-", list(data, do.call(assignarg, c(data, idxval, 
@@ -141,6 +176,11 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
   
   makeActiveBinding(x, f, env)
 }
+
+#' @export
+#' @rdname refset
+is.refset <- function(x) isTRUE(attr(x, ".refset.")) && 
+      bindingIsActive(substitute(x), parent.frame())
 
 # 
 # reference.frame <- function(...) {
