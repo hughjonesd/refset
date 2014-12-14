@@ -1,15 +1,68 @@
 
 # TODO/IDEAS:
-# Could you also have
-# a "reference.frame" class that, when subsetted, spits out a data.view?
-# if so, need a way to know what name is being bound to the subset...
-# but then what about e.g. a[1:3,] <- b[1:3,] ? Perhaps this isn't sensible.
+
+"
+Separate reference() and refset(). refset knows about indices, which
+lets it choose between dynamic and static indexing. 
+Keep the 2-arg form of refset, as it works and allows for
+static indexing. reference() is more general and doesn't care about the
+structure of the code it's passed; it just knows to evaluate something
+in a pre-specified environment. It also doesn't allow for setting.
+
+Allow reference() to do assignment if you pass read.only=FALSE? E.g. by
+adding some code in to call do.call('<-', list(reference, x))?
+
+Create a box() which stores a reference/refset and an environment. 
+rebox() changes the environment. unbox() evaluates the reference. This
+can be used as a substitute (no pun intended) for eval() and substitute().
+ - write some code that shows the problem with substitute in multiple 
+ functions
+
+Allow 2-arg refsets to take forms including names(), rownames(), colnames()?
+Not sure what anyone would use this for, but note that this does not work:
+
+refset(rs, dfr)
+names(rs) # fine
+names(rs) <- 1:3 # silent noop because it evaluates rs and creates a copy...
+
+"
+
+# would like this to work but it doesn't at the mo:
+# dfr <- data.frame(a=1:2, b=1:2)
+# refset(rs, dfr,)
+# names(rs) <- c("c", "d")
+# similarly with rownames() etc...
 #
-# calculated columns? somewhat like data.table?
-# dfr <- data.frame(a=1:4, b=1:4)
-# refset(rs, dfr, x=a+2*b)
-# this basically works already:
-# refset(rs, transform(dfr, x=a+2*b))
+# Observe:
+# > dfr <- data.frame(a=3:4, b=5:6)
+# > refset(rs, dfr,,)
+#   a b
+# 1 3 5
+# 2 4 6
+# > `length<-`(rs, 1)
+# $a
+# [1] 3 4
+# 
+# > rs
+#   a b
+# 1 3 5
+# 2 4 6
+# > length(rs) <- 1
+# > rs
+#   a b
+# 1 3 3
+# 2 4 4
+#
+# why this happens:
+# the call evaluates to `length<-`(rs, 1)
+# this returns a 1-length version of dfr, i.e. just dfr$a
+# the result is automatically assigned to rs
+# but we haven't really changed the length of dfr
+# so we get the repetition
+# if you do e.g. names(x)[1] <- "jim"
+# then names(x) is called, the first component is replaced by "jim"
+# and the result is passed to `names<-` ... then the result is assigned to 
+# x.
 
 #' Create a reference to a subset of an object
 #' 
@@ -18,7 +71,7 @@
 #' contents of the refset change, and when the refset is changed, the object
 #' is changed too.
 #' 
-#' @param x unquoted name of the refset to create
+#' @param x name of the refset to create, as a bare name or character string
 #' @param data the object to refer to
 #' @param ... indices to subset with
 #' @param drop passed to \code{\link{Extract}}
@@ -29,7 +82,7 @@
 #' 
 #' @details
 #' There are two ways to call \code{refset}. The two-argument form, e.g.
-#' \code{refset(myref, mydata[rows,"mycol"])}, creates a reference to the 
+#' \code{refset(myref, mydata[rows,"column"])}, creates a reference to the 
 #' subset of \code{mydata} passed in the second argument. The three-or-more
 #'argument form acts like the \code{\link{subset}} function: the indices in 
 #' \code{...} are applied to \code{data}. If \code{data} is a data.frame, then
@@ -130,7 +183,7 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     rdata <- data
     data <- substitute(data)  
   }
-  x <- deparse(substitute(x))
+  if (is.name(substitute(x))) x <- deparse(substitute(x))
   assignargs <- list("["="[<-", "[["="[[<-", "$"="$<-")
   assignarg <- assignargs[[ssarg]]
   if (is.null(assignarg)) {
@@ -182,31 +235,41 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 is.refset <- function(x) isTRUE(attr(x, ".refset.")) && 
       bindingIsActive(substitute(x), parent.frame())
 
-# 
-# reference.frame <- function(...) {
-# #   cl <- match.call(expand.dots=FALSE)
-# #   cl[[1]] <- data.frame
-# #   dfr <- eval(cl)
-#   dfr <- data.frame(...)
-#   class(dfr) <- c("reference.frame", "data.frame")
-#   dfr
-# }
-# 
-# as.data.frame.reference.frame <- function(rfr) {
-#   class(rfr) <- "data.frame"
-#   rfr
-# }
-# 
-# `[.reference.frame` <- function() {
-#   
-# }
-# 
-# `[[.reference.frame` <- function() {
-#   
-# }
-# 
-# 
-# `$.reference.frame` <- function() {
-#   
-# }
-# 
+is.reference <- function(x) isTRUE(attr(x, ".reference.")) && 
+      bindingIsActive(substitute(x), parent.frame())
+
+
+reference <- function(x, val, eval.env=parent.frame(), 
+      assign.env=parent.frame(), quote=TRUE) {
+  if (is.name(substitute(x))) x <- deparse(substitute(x))
+  if (quote) val <- substitute(val)
+  
+  fn <- function(x) {
+    if (! missing(x)) {
+      stop("Can't assign to a reference object")
+    }
+    res <- eval(val, eval.env)
+    if (! is.null(res)) attr(res, ".reference.") <- TRUE
+    res
+  }
+  
+  makeActiveBinding(x, fn, assign.env)
+}
+
+box <- function(val, env=parent.frame()) {
+  stopifnot(is.environment(env))
+  box <- new.env(parent=env) # is parent=env necessary?
+  # ever a reason to "rebox" a reference with a new environment?
+  # and can we do that?
+  box$env <- env
+  val <- match.call()$val
+  #val <- eval(substitute(val), box$env)
+  # not working because of ref's NSE. cf Hadley...
+  # we need a reference_ function which evaluates val!
+  reference(ref, val, eval.env=env, assign.env=box, quote=FALSE)
+  class(box) <- c("box", class(box))
+  box
+}
+
+unbox <- function(box) box$ref
+
