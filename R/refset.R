@@ -344,7 +344,23 @@ is.parcel <- function(x) inherits(x, "parcel")
 #' @export
 #' @param parcel an object of class 'parcel'
 #' @param value a value to assign
-#' @return The result of evaluating the expression stored in the parcel. For \code{contents<-}, the parcel itself.
+#' @return The result of evaluating the expression stored in the parcel. 
+#' For \code{contents<-}, the parcel itself.
+#' 
+#' If the contents of parcel is not a \code{refset}, typically \code{contents<-}
+#' will simply assign a static value into the parcel.
+#' 
+#' @examples
+#' pcl <- wrap(x^2)
+#' x <- 2
+#' contents(pcl)
+#' x <- 3
+#' contents(pcl)
+#' contents(pcl) <- x^2
+#' contents(pcl)
+#' x <- 2
+#' contents(pcl) # 9 not 4
+#' 
 #' @family wrapping functions
 contents <- function(parcel) {
   stopifnot(is.parcel(parcel))
@@ -355,10 +371,8 @@ contents <- function(parcel) {
 #' @rdname contents
 `contents<-` <- function(parcel, value) {
   stopifnot(is.parcel(parcel))
-  parcel$value <- value
-  expr2 <- substitute(expr <- value, parcel)
-  rm("value", pos=parcel)
-  eval(expr2, parcel$env)
+  expr2 <- bquote(expr <- .(value))
+  eval(expr2, parcel)
   parcel
 }
 

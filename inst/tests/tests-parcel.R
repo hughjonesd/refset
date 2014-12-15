@@ -14,7 +14,7 @@ test_that("wrapping and contents work", {
   expect_equivalent(names(contents(pcl)), LETTERS[1:3])
 })
 
-test_that("wrapping into a context works", {
+test_that("wrapping into an environment works", {
   env <- new.env(emptyenv())
   env$abc <- letters[1:3]
   pcl <- wrap(abc, env=env)
@@ -23,6 +23,11 @@ test_that("wrapping into a context works", {
   expect_equivalent(contents(pcl), letters[4:6])
 })
 
+test_that("wrapping arbitrary expressions works", {
+  pcl <- wrap(x^3)
+  x <- 2
+  expect_equivalent(contents(pcl), 8)
+})
 
 test_that("unwrap_as works", {
   abc <- letters[1:3]
@@ -32,3 +37,11 @@ test_that("unwrap_as works", {
   abc <- 1:3
   expect_equivalent(ref, abc)
 })
+
+test_that("assigning to contents works", {
+  abc <- letters[1:3]
+  pcl <- wrapset(abc,)
+  contents(pcl) <- letters[24:26]
+  expect_equivalent(abc, letters[24:26])
+})
+
