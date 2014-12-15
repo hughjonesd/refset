@@ -2,17 +2,13 @@
 # TODO/IDEAS:
 
 "
-Seems that pryr's %<a-% is really doing what reference does already...
-so not sure that I have much to add to it -> drop 'reference'.
-
-But note that %<a-% does not handle changing well :-)
-
-Make assignment forms work for...
-names(), dimnames(), length(), dim(), attr(), class(), rownames(), row.names()
-and split() - others? 
-
 Should I make rs %r% dfr or refset(rs, dfr) work without extra commas?
 If so, it has to take the real semantics of dfr, not dfr[] ...
+
+make is.refset() work for e.g. parcel$ref ... (how? is.refset has env argument? and
+insists on is.name of its first argument?)
+
+do you need parcel?
 "
 
 # would like this to work but it doesn't at the mo:
@@ -245,71 +241,6 @@ is.refset <- function(x) isTRUE(attr(x, ".refset.")) &&
 #' @export
 #' @rdname refset
 `%r%` <- refset
-
-#' @export
-#' @rdname reference
-is.reference <- function(x) isTRUE(attr(x, ".reference.")) && 
-      bindingIsActive(substitute(x), parent.frame())
-
-
-#' Create a reference to an R expression. 
-#' 
-#' Create a reference to an R expression. Evaluating the reference 
-#' evaluates the expression in a prespecified environment.
-#'
-#' @param x name of the reference to create, as a bare name or a character string
-#' @param expr expression to reference
-#' @param eval.env environment in which \code{expr} will be evaluated
-#' @assign.env environment in which \code{x} will be created
-#' 
-#' @details
-#' This is similar to \code{\link{delayedAssign}}, but allows the expression 
-#' \code{expr} to be evaluated repeatedly instead of just once.
-#' Assigning to \code{x} gives an error. To create a variable you can assign
-#' to, use \code{\link{refset}}.
-#' Reassigning to a new variable assigns the result of evaluation, not the 
-#' reference. This means that you can't pass references into functions. To do
-#' that, use a \code{\link{parcel}}.
-#' 
-#' @value 
-#' \code{reference} returns \code{NULL} invisibly, but binds to \code{x} in
-#' \code{assign.env}. \code{is.reference} returns \code{TRUE} or \code{FALSE}.
-#' 
-#' @examples
-#' 
-#' reference(rval, sample(1000, 1))
-#' rval
-#' rval
-#' 
-#' fixed <- rval
-#' fixed
-#' fixed
-#' 
-#' montecarlo <- data.frame(x1=rnorm(10), x2=rnorm(10))
-#' reference(dgp, transform(montecarlo, y=2*x1 + 3*x2 + rnorm(nrow(montecarlo))))
-#' head(dgp, 3)
-#' head(dgp, 3)
-#' replicate(10, coef(lm(y~x1+x2, data=dgp)))
-#'  
-#' @family parcel
-reference <- function(x, expr, eval.env=parent.frame(), 
-      assign.env=parent.frame(), quote=TRUE) {
-  if (is.name(substitute(x))) x <- deparse(substitute(x))
-  if (quote) expr <- substitute(expr)
-  force(eval.env)
-  fn <- function(x) {
-    if (! missing(x)) {
-      stop("Can't assign to a reference object")
-    }
-    #res <- if (quote) eval(expr, eval.env) else eval(evalq(expr, eval.env), 
-    #      eval.env)
-    res <- eval(expr, eval.env)
-    if (! is.null(res)) attr(res, ".reference.") <- TRUE
-    res
-  }
-  
-  makeActiveBinding(x, fn, assign.env)
-}
 
 wrap <- function(expr, env=parent.frame()) {
   stopifnot(is.environment(env))
