@@ -60,7 +60,8 @@ override <-
 #' @param dyn.idx update indices dynamically
 #' @param read.only create a read-only refset which throws an error if assigned
 #'        to
-#' @param env environment in which to create the refset 
+#' @param eval.env environment in which \code{data} and indices will be evaluated
+#' @param assign.env environment in which the variable named by \code{x} will be created 
 #' 
 #' @details
 #' There are two ways to call \code{refset}. The two-argument form, e.g.
@@ -150,8 +151,8 @@ override <-
 #
 #' @export
 refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
-      env=parent.frame()) {
-  
+      eval.env=parent.frame(), assign.env=parent.frame()) {
+  env <- eval.env
   if (missing(...)) {
     ssarg <- as.character(substitute(data)[[1]])
     dots <- as.list(substitute(data)[-1:-2])
@@ -211,7 +212,7 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     }
   }
   
-  makeActiveBinding(x, f, env)
+  makeActiveBinding(x, f, assign.env)
 }
 
 #' @export
@@ -251,7 +252,7 @@ is.reference <- function(x) isTRUE(attr(x, ".reference.")) &&
 #' 
 #' @examples
 #' 
-#' reference(rval, sample(100, 1))
+#' reference(rval, sample(1000, 1))
 #' rval
 #' rval
 #' 

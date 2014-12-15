@@ -91,9 +91,9 @@ test_that("data frame indexing works", {
 })
 
 test_that("assigning into an environment works", {
-  e2 <- new.env()
+  e2 <- new.env(emptyenv())
   assign("dfr", data.frame(a=1:5, b=6:10), e2)
-  refset(ss, dfr, 1:3, 1:2, env=e2)
+  refset(ss, dfr, 1:3, 1:2, assign.env=e2, eval.env=e2)
   expect_equivalent(e2$ss$a, 1:3)
   e2$dfr$a <- 6:10
   expect_equivalent(e2$ss$a, 6:8)
