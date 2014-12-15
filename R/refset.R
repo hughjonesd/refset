@@ -238,6 +238,7 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     }
   }
   
+  if (exists(x, where=assign.env, inherits=FALSE)) rm(x, pos=env)
   makeActiveBinding(x, f, assign.env)
 }
 
