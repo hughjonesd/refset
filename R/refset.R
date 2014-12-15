@@ -247,7 +247,7 @@ wrap <- function(expr, env=parent.frame()) {
   parcel <- new.env(parent=env) # is parent=env necessary?
   parcel$env <- env
   expr <- match.call()$expr
-  reference(ref, expr, eval.env=env, assign.env=parcel, quote=FALSE)
+  parcel$expr <- expr
   class(parcel) <- c("parcel", class(parcel))
   parcel
 }
@@ -258,7 +258,7 @@ wrapset <- function(data, ..., env=parent.frame()) {
   parcel$env <- env
   mc <- match.call(expand.dots=TRUE)
   mc$env <- NULL
-  mc$x <- quote(ref)
+  mc$x <- quote(expr)
   mc$eval.env=env
   mc$assign.env=parcel
   mc[[1]] <- quote(refset)
@@ -271,19 +271,21 @@ is.parcel <- function(x) inherits(x, "parcel")
 
 contents <- function(parcel) {
   stopifnot(is.parcel(parcel))
-  parcel$ref
+  eval(parcel$expr, parcel$env)
 }
 
 `contents<-` <- function(parcel, value) {
   stopifnot(is.parcel(parcel))
-  parcel$ref <- value # will break if ref is a reference not a refset
+  parcel$value <- value
+  expr2 <- substitute(expr <- value, parcel)
+  rm("value", pos=parcel)
+  eval(expr2, parcel$env)
   parcel
 }
 
 unwrap_as <- function(x, parcel, env=parent.frame()) {
-  # fix "is reference"
-  reference(substitute(x),  contents(parcel), assign.env=env, quote=FALSE) 
-  return(invisible())
-  if (is.refset(parcel$ref)) refset(x, unwrap(parcel), env=env) else
-  stop("Unknown object in parcel")
+  x <- deparse(substitute(x))
+  f <- function(val) if (missing(val)) contents(parcel) else contents(parcel) <- val
+  if (exists(x, where=env, inherits=FALSE)) rm(x, pos=env)
+  makeActiveBinding(x, f, env=env) 
 }
