@@ -8,7 +8,14 @@ If so, it has to take the real semantics of dfr, not dfr[] ...
 make is.refset() work for e.g. parcel$ref ... (how? is.refset has env argument? and
 insists on is.name of its first argument?)
 
-do you need parcel?
+way to not set .refset. attribute?
+
+do you need parcel? One possibility: parcel() should be more generally a 
+way of passing around activeBindings, which remember their environment.
+
+Note: pryr can do stuff like:
+foo %<a-% if (missing(value)) dfr[1,] else dfr[1,] <<- value
+ But I think yours is probably easier.
 "
 
 # would like this to work but it doesn't at the mo:
@@ -94,10 +101,11 @@ do you need parcel?
 #' 
 #' By default, the indices in subset are updated dynamically. 
 #' For example, if you call \code{refset(myref, mydata, x >= 3,)} and then
-#' set \code{mydata$x <- 3}, the number of rows in \code{myref} will
+#' set \code{mydata$x <- 3}, the number of rows in \code{myref} will probably
 #' increase. To turn this behaviour off and make a reference to a "fixed" 
 #' subset of your object, use \code{dyn.idx=FALSE}.
 #' 
+#' \code{\%r\%} is an infix version of the two-argument form.
 #' 
 #' @return \code{refset} returns \code{NULL}, but the \code{x} argument 
 #' will be assigned to
@@ -242,6 +250,33 @@ is.refset <- function(x) isTRUE(attr(x, ".refset.")) &&
 #' @rdname refset
 `%r%` <- refset
 
+#' Wrap an expression and its environment into a parcel.
+#' 
+#' Refsets (and other active bindings) cannot be passed as function
+#' arguments, since doing so makes a copy. \code{wrap} allows you to pass
+#' arbitrary expressions between functions. 
+#' 
+#' @param expr an R expression
+#' @param env environment in which \code{expr} is to be evaluated
+#' 
+#' @return
+#' An object of class 'parcel', with components \code{expr} and \code{env}.
+#' 
+#' @seealso 
+#' To evaluate the parcel contents in the environment \code{env}, call 
+#' \code{\link{contents}} on the parcel. To change parcel contents use
+#' \code{\link{contents<-}}.To rebind the contents to a variable, use
+#' \code{\link{unwrap_as}}.
+#' 
+#' 
+#' @examples
+#' dfr <- data.frame(a=1:5, b=1:5)
+#' rs %r% dfr[1:2,]
+#' parcel <- wrap(rs)
+#' f <- function (parcel) contents(parcel) <- contents(parcel)*2
+#' f(parcel)
+#' f(parcel)
+#'     
 wrap <- function(expr, env=parent.frame()) {
   stopifnot(is.environment(env))
   parcel <- new.env(parent=env) # is parent=env necessary?
