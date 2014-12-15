@@ -264,12 +264,7 @@ is.refset <- function(x) isTRUE(attr(x, ".refset.")) &&
 #' @return
 #' An object of class 'parcel', with components \code{expr} and \code{env}.
 #' 
-#' @seealso 
-#' To evaluate the parcel contents in the environment \code{env}, call 
-#' \code{\link{contents}} on the parcel. To change parcel contents use
-#' \code{\link{contents<-}}.To rebind the contents to a variable, use
-#' \code{\link{unwrap_as}}.
-#' 
+#' @family wrapping functions
 #' 
 #' @examples
 #' dfr <- data.frame(a=1:4, b=1:4)
@@ -285,6 +280,7 @@ is.refset <- function(x) isTRUE(attr(x, ".refset.")) &&
 #' f <- function(parcel) {x <- 10; contents(parcel)}
 #' f(parcel)
 #' 
+#' @export
 wrap <- function(expr, env=parent.frame(), quote=TRUE) {
   stopifnot(is.environment(env))
   parcel <- new.env(parent=env) # is parent=env necessary?
@@ -296,6 +292,24 @@ wrap <- function(expr, env=parent.frame(), quote=TRUE) {
   parcel
 }
 
+#' Convenience function to create a parcel containing a refset.
+#' 
+#' \code{wrapset} calls \code{\link{refset}} on its arguments and
+#' returns the resulting active binding in a \code{parcel} object
+#' for passing around.
+#' 
+#' @param data,... passed to \code{\link{refset}} 
+#' @param env passed to \code{\link{refset}} as argument \code{eval.env}
+#' 
+#' @return A \code{parcel} object.
+#' @family wrapping functions
+#' 
+#' @examples
+#' dfr <- data.frame(a=1:5, b=1:5)
+#' parcel <- wrapset(dfr, a<3, , drop=FALSE)
+#' contents(parcel)
+#' 
+#' @export
 wrapset <- function(data, ..., env=parent.frame()) {
   stopifnot(is.environment(env))
   parcel <- new.env(parent=env) # is parent=env necessary?
@@ -311,13 +325,34 @@ wrapset <- function(data, ..., env=parent.frame()) {
   parcel
 }
 
+
+#' Checks whether an object is a parcel
+#' @export
+#' @param x an object to examine
+#' @return \code{TRUE} or \code{FALSE}.
+#' @family wrapping functions
 is.parcel <- function(x) inherits(x, "parcel")
 
+
+#' Returns or changes parcel contents
+#' 
+#' \code{contents} returns the value of the parcel contents by evaluating
+#' the expression in the parcel. \code{contents<-} attempts to assign
+#' to the expression, which will only work if the expression is appropriate, e.g.
+#' a refset.
+#' 
+#' @export
+#' @param parcel an object of class 'parcel'
+#' @param value a value to assign
+#' @return The result of evaluating the expression stored in the parcel. For \code{contents<-}, the parcel itself.
+#' @family wrapping functions
 contents <- function(parcel) {
   stopifnot(is.parcel(parcel))
   eval(parcel$expr, parcel$env)
 }
 
+#' @export
+#' @rdname contents
 `contents<-` <- function(parcel, value) {
   stopifnot(is.parcel(parcel))
   parcel$value <- value
@@ -327,6 +362,21 @@ contents <- function(parcel) {
   parcel
 }
 
+#' Unwrap contents of a parcel into a new variable
+#' 
+#' \code{unwrap_as} creates a new variable which, when evaluated,
+#' calls \code{\link{contents}} to return the parcel contents.
+#' 
+#' @param x name of the variable to bind to
+#' @param parcel an object of class 'parcel'
+#' @param env environment to assign the variable into
+#' @export
+#' @family wrapping functions
+#' @examples
+#' vec <- 1:10
+#' parcel <- wrapset(vec, vec > 3) 
+#' unwrap_as(y, parcel)
+#' y
 unwrap_as <- function(x, parcel, env=parent.frame()) {
   stopifnot(is.parcel(parcel))
   x <- deparse(substitute(x))

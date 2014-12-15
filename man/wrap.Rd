@@ -3,7 +3,7 @@
 \alias{wrap}
 \title{Wrap an expression and its environment into a parcel.}
 \usage{
-wrap(expr, env = parent.frame())
+wrap(expr, env = parent.frame(), quote = TRUE)
 }
 \arguments{
 \item{expr}{an R expression}
@@ -16,20 +16,26 @@ An object of class 'parcel', with components \code{expr} and \code{env}.
 \description{
 Refsets (and other active bindings) cannot be passed as function
 arguments, since doing so makes a copy. \code{wrap} allows you to pass
-arbitrary expressions between functions.
+arbitrary expressions between functions and records where they are
+ultimately evaluated.
 }
 \examples{
-dfr <- data.frame(a=1:5, b=1:5)
+dfr <- data.frame(a=1:4, b=1:4)
 rs \%r\% dfr[1:2,]
 parcel <- wrap(rs)
 f <- function (parcel) contents(parcel) <- contents(parcel)*2
 f(parcel)
+contents(parcel)
+dfr
+
+parcel <- wrap(x^2) # non-refset use
+x <- 3
+f <- function(parcel) {x <- 10; contents(parcel)}
 f(parcel)
 }
 \seealso{
-To evaluate the parcel contents in the environment \code{env}, call
-\code{\link{contents}} on the parcel. To change parcel contents use
-\code{\link{contents<-}}.To rebind the contents to a variable, use
-\code{\link{unwrap_as}}.
+Other wrapping functions: \code{\link{contents}},
+  \code{\link{contents<-}}; \code{\link{is.parcel}};
+  \code{\link{unwrap_as}}; \code{\link{wrapset}}
 }
 
