@@ -2,29 +2,11 @@
 # TODO/IDEAS:
 
 "
-Separate reference() and refset(). refset knows about indices, which
-lets it choose between dynamic and static indexing. 
-Keep the 2-arg form of refset, as it works and allows for
-static indexing. reference() is more general and doesn't care about the
-structure of the code it's passed; it just knows to evaluate something
-in a pre-specified environment. It also doesn't allow for setting.
-
 Allow reference() to do assignment if you pass read.only=FALSE? E.g. by
 adding some code in to call do.call('<-', list(reference, x))?
 
-Create a box() which stores a reference/refset and an environment. 
-rebox() changes the environment. unbox() evaluates the reference. This
-can be used as a substitute (no pun intended) for eval() and substitute().
- - write some code that shows the problem with substitute in multiple 
- functions
-
-Allow 2-arg refsets to take forms including names(), rownames(), colnames()?
-Not sure what anyone would use this for, but note that this does not work:
-
-refset(rs, dfr)
-names(rs) # fine
-names(rs) <- 1:3 # silent noop because it evaluates rs and creates a copy...
-
+class refset and reference (optionally?) and override names()<-? and similar...
+override <-
 "
 
 # would like this to work but it doesn't at the mo:
@@ -108,6 +90,8 @@ names(rs) <- 1:3 # silent noop because it evaluates rs and creates a copy...
 #' 
 #' @seealso
 #' Refsets are implemented using \code{makeActiveBinding}.
+#' 
+#' @family parcel
 #' 
 #' @examples
 #' dfr <- data.frame(a=1:4, b=1:4)
@@ -235,20 +219,63 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 is.refset <- function(x) isTRUE(attr(x, ".refset.")) && 
       bindingIsActive(substitute(x), parent.frame())
 
+
+#' @export
+#' @rdname reference
 is.reference <- function(x) isTRUE(attr(x, ".reference.")) && 
       bindingIsActive(substitute(x), parent.frame())
 
 
-reference <- function(x, val, eval.env=parent.frame(), 
+#' Create a reference to an R expression. 
+#' 
+#' Create a reference to an R expression. Evaluating the reference 
+#' evaluates the expression in a prespecified environment.
+#'
+#' @param x name of the reference to create, as a bare name or a character string
+#' @param expr expression to reference
+#' @param eval.env environment in which \code{expr} will be evaluated
+#' @assign.env environment in which \code{x} will be created
+#' 
+#' @details
+#' This is similar to \code{\link{delayedAssign}}, but allows the expression 
+#' \code{expr} to be evaluated repeatedly instead of just once.
+#' Assigning to \code{x} gives an error. To create a variable you can assign
+#' to, use \code{\link{refset}}.
+#' Reassigning to a new variable assigns the result of evaluation, not the 
+#' reference. This means that you can't pass references into functions. To do
+#' that, use a \code{\link{parcel}}.
+#' 
+#' @value 
+#' \code{reference} returns \code{NULL} invisibly, but binds to \code{x} in
+#' \code{assign.env}. \code{is.reference} returns \code{TRUE} or \code{FALSE}.
+#' 
+#' @examples
+#' 
+#' reference(rval, sample(100, 1))
+#' rval
+#' rval
+#' 
+#' fixed <- rval
+#' fixed
+#' fixed
+#' 
+#' montecarlo <- data.frame(x1=rnorm(10), x2=rnorm(10))
+#' reference(dgp, transform(montecarlo, y=2*x1 + 3*x2 + rnorm(nrow(montecarlo))))
+#' dgp$y
+#' dgp$y
+#' replicate(10, coef(lm(y~x1+x2, data=dgp)))
+#'  
+#' @family parcel
+reference <- function(x, expr, eval.env=parent.frame(), 
       assign.env=parent.frame(), quote=TRUE) {
   if (is.name(substitute(x))) x <- deparse(substitute(x))
-  if (quote) val <- substitute(val)
+  if (quote) expr <- substitute(expr)
   
   fn <- function(x) {
     if (! missing(x)) {
       stop("Can't assign to a reference object")
     }
-    res <- eval(val, eval.env)
+    res <- eval(expr, eval.env)
     if (! is.null(res)) attr(res, ".reference.") <- TRUE
     res
   }
@@ -271,5 +298,17 @@ box <- function(val, env=parent.frame()) {
   box
 }
 
-unbox <- function(box) box$ref
+is.box <- function(x) inherits(x, "box")
 
+unbox <- function(box) {
+  stopifnot(is.box(box))
+  box$ref
+}
+
+unbox_into <- function(x, box, env=parent.frame()) {
+  # fix "is reference"
+  reference(substitute(x), unbox(box), assign.env=env, quote=FALSE) 
+  return()
+  if (is.refset(box$ref)) refset(x, unbox(box), env=env) else
+  stop("Unknown object in box")
+}
