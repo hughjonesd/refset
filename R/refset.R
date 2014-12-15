@@ -2,11 +2,17 @@
 # TODO/IDEAS:
 
 "
-Allow reference() to do assignment if you pass read.only=FALSE? E.g. by
-adding some code in to call do.call('<-', list(reference, x))?
+Seems that pryr's %<a-% is really doing what reference does already...
+so not sure that I have much to add to it -> drop 'reference'.
 
-class refset and reference (optionally?) and override names()<-? and similar...
-override <-
+But note that %<a-% does not handle changing well :-)
+
+Make assignment forms work for...
+names(), dimnames(), length(), dim(), attr(), class(), rownames(), row.names()
+and split() - others? 
+
+Should I make rs %r% dfr or refset(rs, dfr) work without extra commas?
+If so, it has to take the real semantics of dfr, not dfr[] ...
 "
 
 # would like this to work but it doesn't at the mo:
@@ -42,9 +48,23 @@ override <-
 # but we haven't really changed the length of dfr
 # so we get the repetition
 # if you do e.g. names(x)[1] <- "jim"
-# then names(x) is called, the first component is replaced by "jim"
+# then names(x) is called, the first component of the result is replaced by "jim"
 # and the result is passed to `names<-` ... then the result is assigned to 
-# x.
+# x. Like so:
+#
+# tmp <- names(x)[1]
+# x <- `names<-`(x, tmp)
+#
+# at the moment, the first x will give you the relevant names. Fine.
+# the result of the `names<-` call will also be what you want.
+# but the evaluation will give you a subset.
+# arguably behaviour for names is correct, since if you call e.g.
+# names(dfr[1:2,]) you don't affect the names of dfr.
+# similarly for length:
+# vec <- 1:10
+# length(vec[1:5]) <- 2 # 1 2 1 2 1 6 7 8 9 10
+# even if you do refset(rs, vec,) you are implicitly creating a 
+# reference to vec[]... and again, length(vec[]) does not change the length...
 
 #' Create a reference to a subset of an object
 #' 
@@ -68,8 +88,8 @@ override <-
 #' \code{refset(myref, mydata[rows,"column"])}, creates a reference to the 
 #' subset of \code{mydata} passed in the second argument. The three-or-more
 #'argument form acts like the \code{\link{subset}} function: the indices in 
-#' \code{...} are applied to \code{data}. If \code{data} is a data.frame, then
-#' \code{...} is interpreted within it, so you can refer to columns directly: 
+#' \code{...} are applied to \code{data}. If \code{data} is a data.frame, then 
+#' the indices are interpreted within it, so you can refer to columns directly: 
 #' \code{refset(myref, mydata, a>1 & b<a,)}. Bare column names must be quoted,
 #' however.
 #' 
@@ -105,6 +125,8 @@ override <-
 #' # same:
 #' refset(rs, dfr, 1:2, )
 #' 
+#' # same:
+#' rs %r% dfr[1:2,]
 #' 
 #' vec <- 1:10
 #' refset(middle, vec[4:6])
@@ -220,6 +242,9 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 is.refset <- function(x) isTRUE(attr(x, ".refset.")) && 
       bindingIsActive(substitute(x), parent.frame())
 
+#' @export
+#' @rdname refset
+`%r%` <- refset
 
 #' @export
 #' @rdname reference
@@ -262,8 +287,8 @@ is.reference <- function(x) isTRUE(attr(x, ".reference.")) &&
 #' 
 #' montecarlo <- data.frame(x1=rnorm(10), x2=rnorm(10))
 #' reference(dgp, transform(montecarlo, y=2*x1 + 3*x2 + rnorm(nrow(montecarlo))))
-#' dgp$y
-#' dgp$y
+#' head(dgp, 3)
+#' head(dgp, 3)
 #' replicate(10, coef(lm(y~x1+x2, data=dgp)))
 #'  
 #' @family parcel
@@ -271,11 +296,13 @@ reference <- function(x, expr, eval.env=parent.frame(),
       assign.env=parent.frame(), quote=TRUE) {
   if (is.name(substitute(x))) x <- deparse(substitute(x))
   if (quote) expr <- substitute(expr)
-  
+  force(eval.env)
   fn <- function(x) {
     if (! missing(x)) {
       stop("Can't assign to a reference object")
     }
+    #res <- if (quote) eval(expr, eval.env) else eval(evalq(expr, eval.env), 
+    #      eval.env)
     res <- eval(expr, eval.env)
     if (! is.null(res)) attr(res, ".reference.") <- TRUE
     res
@@ -284,32 +311,48 @@ reference <- function(x, expr, eval.env=parent.frame(),
   makeActiveBinding(x, fn, assign.env)
 }
 
-box <- function(val, env=parent.frame()) {
+wrap <- function(expr, env=parent.frame()) {
   stopifnot(is.environment(env))
-  box <- new.env(parent=env) # is parent=env necessary?
-  # ever a reason to "rebox" a reference with a new environment?
-  # and can we do that?
-  box$env <- env
-  val <- match.call()$val
-  #val <- eval(substitute(val), box$env)
-  # not working because of ref's NSE. cf Hadley...
-  # we need a reference_ function which evaluates val!
-  reference(ref, val, eval.env=env, assign.env=box, quote=FALSE)
-  class(box) <- c("box", class(box))
-  box
+  parcel <- new.env(parent=env) # is parent=env necessary?
+  parcel$env <- env
+  expr <- match.call()$expr
+  reference(ref, expr, eval.env=env, assign.env=parcel, quote=FALSE)
+  class(parcel) <- c("parcel", class(parcel))
+  parcel
 }
 
-is.box <- function(x) inherits(x, "box")
-
-unbox <- function(box) {
-  stopifnot(is.box(box))
-  box$ref
+wrapset <- function(data, ..., env=parent.frame()) {
+  stopifnot(is.environment(env))
+  parcel <- new.env(parent=env) # is parent=env necessary?
+  parcel$env <- env
+  mc <- match.call(expand.dots=TRUE)
+  mc$env <- NULL
+  mc$x <- quote(ref)
+  mc$eval.env=env
+  mc$assign.env=parcel
+  mc[[1]] <- quote(refset)
+  eval(mc)
+  class(parcel) <- c("parcel", class(parcel))
+  parcel
 }
 
-unbox_into <- function(x, box, env=parent.frame()) {
+is.parcel <- function(x) inherits(x, "parcel")
+
+contents <- function(parcel) {
+  stopifnot(is.parcel(parcel))
+  parcel$ref
+}
+
+`contents<-` <- function(parcel, value) {
+  stopifnot(is.parcel(parcel))
+  parcel$ref <- value # will break if ref is a reference not a refset
+  parcel
+}
+
+unwrap_as <- function(x, parcel, env=parent.frame()) {
   # fix "is reference"
-  reference(substitute(x), unbox(box), assign.env=env, quote=FALSE) 
-  return()
-  if (is.refset(box$ref)) refset(x, unbox(box), env=env) else
-  stop("Unknown object in box")
+  reference(substitute(x),  contents(parcel), assign.env=env, quote=FALSE) 
+  return(invisible())
+  if (is.refset(parcel$ref)) refset(x, unwrap(parcel), env=env) else
+  stop("Unknown object in parcel")
 }
