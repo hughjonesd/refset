@@ -238,7 +238,7 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     }
   }
   
-  if (exists(x, where=assign.env, inherits=FALSE)) rm(x, pos=env)
+  if (exists(x, where=assign.env, inherits=FALSE)) rm(list=x, pos=env)
   makeActiveBinding(x, f, assign.env)
 }
 
@@ -255,7 +255,8 @@ is.refset <- function(x) isTRUE(attr(x, ".refset.")) &&
 #' 
 #' Refsets (and other active bindings) cannot be passed as function
 #' arguments, since doing so makes a copy. \code{wrap} allows you to pass
-#' arbitrary expressions between functions. 
+#' arbitrary expressions between functions and records where they are
+#' ultimately evaluated. 
 #' 
 #' @param expr an R expression
 #' @param env environment in which \code{expr} is to be evaluated
@@ -271,18 +272,25 @@ is.refset <- function(x) isTRUE(attr(x, ".refset.")) &&
 #' 
 #' 
 #' @examples
-#' dfr <- data.frame(a=1:5, b=1:5)
+#' dfr <- data.frame(a=1:4, b=1:4)
 #' rs %r% dfr[1:2,]
 #' parcel <- wrap(rs)
 #' f <- function (parcel) contents(parcel) <- contents(parcel)*2
 #' f(parcel)
+#' contents(parcel)
+#' dfr
+#' 
+#' parcel <- wrap(x^2) # non-refset use
+#' x <- 3           
+#' f <- function(parcel) {x <- 10; contents(parcel)}
 #' f(parcel)
-#'     
-wrap <- function(expr, env=parent.frame()) {
+#' 
+wrap <- function(expr, env=parent.frame(), quote=TRUE) {
   stopifnot(is.environment(env))
   parcel <- new.env(parent=env) # is parent=env necessary?
   parcel$env <- env
   expr <- match.call()$expr
+  if (! quote) expr <- eval(expr, env)
   parcel$expr <- expr
   class(parcel) <- c("parcel", class(parcel))
   parcel
@@ -320,8 +328,9 @@ contents <- function(parcel) {
 }
 
 unwrap_as <- function(x, parcel, env=parent.frame()) {
+  stopifnot(is.parcel(parcel))
   x <- deparse(substitute(x))
   f <- function(val) if (missing(val)) contents(parcel) else contents(parcel) <- val
-  if (exists(x, where=env, inherits=FALSE)) rm(x, pos=env)
+  if (exists(x, where=env, inherits=FALSE)) rm(list=x, pos=env)
   makeActiveBinding(x, f, env=env) 
 }
