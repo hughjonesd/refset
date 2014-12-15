@@ -126,8 +126,7 @@ dgp$x1 <- runif(10)
 ## Introduction
 
 Normally, R uses "pass by value". This means that when you run
-`b <- a` you have two copies of the same data which are completely independent.
-Similarly, `
+`b <- a` you have two independent copies of the same data. Similarly, the code:
 
 ```{r}
 f <- function(x) {x <- x*2}
@@ -135,7 +134,7 @@ a <- 4
 f(a)
 a
 ```
-does not change the value of `a`: the function was passed the contents
+does not change the value of `a`, since the function `f` gets passed the contents
 of `a` rather than the variable `a` itself.
 
 This is fine for most cases, especially for traditional uses of R in which
@@ -143,13 +142,22 @@ the programmer or statistician passes in a value to a function, and sees
 the result on the command line. However, in some cases we would like to have a
 single object being passed around. For example, if we have a long running web
 server, we will want to have a single object representing this, not many
-copies. 
+copies. Or, suppose you have a single data frame, and you would like to work on 
+parts of it using standard data frame syntax, but to keep it synced with the
+main data frame. 
+
+The parcel package allows you to do this by creating objects that refer to other
+objects, or subsets of them.
+
+
+
+
 
 Reference classes (see `?ReferenceClasses`) and similar systems allow for this
 by using R environments. But they don't fit very well with R's traditional
 syntax. To take a subset of a reference object, you need to define your own 
-methods. Suppose you have a single data frame, and you would like to work on 
-parts of it using standard data frame syntax, but 
+methods. 
+
 
 
 
