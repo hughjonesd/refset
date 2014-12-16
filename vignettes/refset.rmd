@@ -1,0 +1,13 @@
+---
+title: "refset - subsets with reference semantics"
+author: "David Hugh-Jones <davidhughjones@gmail.com>"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{refset}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r child='../README-child.rmd'}
+```
