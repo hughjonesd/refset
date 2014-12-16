@@ -94,7 +94,7 @@ lst$b
 rs %r% employees[1:3,] # equivalent to refset(rs, employees[1:3,])
 ```
 
-### To pass a refset into a function, create a `wrapset`: 
+### To pass a refset into a function, use `wrapset` to create a parcel: 
 ```{r wrap}
 f <- function(x) {
   cx <- contents(x)
