@@ -5,5 +5,5 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_document
 ---
 
-```{r child='README-child.rmd'}
+```{r child='vignettes/README-child.rmd'}
 ```
