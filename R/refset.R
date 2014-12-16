@@ -128,13 +128,12 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
       drop <- eval(dots$drop, env) # should it be in env? think so
       dots$drop <- NULL
     }
-    rdata <- eval(data, env)
   } else {
     ssarg <- "["
     dots <- match.call(expand.dots=FALSE)$...
-    rdata <- data
-    data <- substitute(data)  
+    data <- substitute(data)
   }
+  rdata <- eval(data, env)
   if (is.name(substitute(x))) x <- deparse(substitute(x))
   assignargs <- list("["="[<-", "[["="[[<-", "$"="$<-")
   assignarg <- assignargs[[ssarg]]
@@ -311,10 +310,8 @@ contents <- function(parcel) {
 #' @rdname contents
 `contents<-` <- function(parcel, value) {
   stopifnot(is.parcel(parcel))
-  parcel$value <- value
-  expr2 <- substitute(expr <- value, parcel)
-  eval(expr2, parcel$env)
-  rm("value", pos=parcel)
+  expr2 <- substitute(expr <- value)
+  eval(expr2, parcel)
   parcel
 }
 
