@@ -282,15 +282,4 @@ test_that("changing ncol of original object works", {
   expect_equivalent(ncol(ss), 4L)
 })
 
-test_that("is.refset works", {
-  vec <- 1:5
-  refset(ss, vec, 1)
-  expect_true(is.refset(ss))
-  x <- ss
-  expect_false(is.refset(x))
-  tmp <- "blah"
-  makeActiveBinding("x2", function(x) if (missing(x)) tmp else tmp <<- x, 
-        environment())
-  expect_false(is.refset(x2))
-})
 

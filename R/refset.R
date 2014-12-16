@@ -112,7 +112,6 @@ foo %<a-% if (missing(value)) dfr[1,] else dfr[1,] <<- value
 #' will be assigned to
 #' in the calling environment (or in \code{env}, if it is specified). 
 #' \code{x} will have an attribute \code{".refset."}.
-#' \code{is.refset} returns \code{TRUE} or \code{FALSE}.
 #' 
 #' @seealso
 #' Refsets are implemented using \code{makeActiveBinding}.
@@ -242,11 +241,6 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
   if (exists(x, where=assign.env, inherits=FALSE)) rm(list=x, pos=env)
   makeActiveBinding(x, f, assign.env)
 }
-
-#' @export
-#' @rdname refset
-is.refset <- function(x) isTRUE(attr(x, ".refset.")) && 
-      bindingIsActive(substitute(x), parent.frame())
 
 #' @export
 #' @rdname refset
