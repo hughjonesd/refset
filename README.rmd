@@ -155,7 +155,6 @@ comparison, we'll also create a standard subset.
 
 ```{r}
 ss <- dfr[dfr$x1 <= 3, c("x1", "alpha")]
-ls()
 rs
 ss
 ```
@@ -343,7 +342,8 @@ There is a shorthand function to create a wrapped refset, called (unsurprisingly
 wrapset.
 
 ```{r}
-parcel <- wrapset(employees, grepl("Terrible", employees$name), )
+parcel <- wrapset(employees, grepl("Terrible", employees$name), , drop=FALSE)
+# note: drop=FALSE works just as for standard subsetting, see ?Extract
 contents(parcel)
 ```
 

@@ -58,15 +58,11 @@ The skinny
     rs2 
 
     ## [1] 1 2
-    ## attr(,".refset.")
-    ## [1] TRUE
 
     rs$id <- rs$id + 1000
     rs2
 
     ## [1] 1001 1002
-    ## attr(,".refset.")
-    ## [1] TRUE
 
     rs2 <- 101:102
     employees$id
@@ -88,24 +84,6 @@ The skinny
 
     ##   id name age gender
     ## 4  4 Luis  24      M
-
-### But you can turn this off
-
-    refset(rss, employees, age < 40, , dyn.idx=FALSE)
-    rss
-
-    ##    id    name age gender
-    ## 1 101   Jimmy  30      M
-    ## 3   3 Meng Qi  39      F
-    ## 4   4    Luis  24      M
-
-    employees$age <- employees$age + 1
-    rss
-
-    ##    id    name age gender
-    ## 1 101   Jimmy  31      M
-    ## 3   3 Meng Qi  40      F
-    ## 4   4    Luis  25      M
 
 ### You can refset any subsettable object...
 
@@ -142,10 +120,10 @@ The skinny
     employees
 
     ##    id             name age gender
-    ## 1 101 Jimmy the Silent  31      M
-    ## 2 102  Silvia the Fair  47      F
-    ## 3   3  Meng Qi the Kid  40      F
-    ## 4   4             Luis  25      M
+    ## 1 101    Jimmy the Kid  30      M
+    ## 2 102  Silvia the Fair  46      F
+    ## 3   3 Meng Qi the Fair  39      F
+    ## 4   4             Luis  24      M
 
 Introduction
 ------------
@@ -190,19 +168,6 @@ The call above creates a new variable `rs` in your environment.
 for now.) For comparison, we'll also create a standard subset.
 
     ss <- dfr[dfr$x1 <= 3, c("x1", "alpha")]
-    ls()
-
-    ##  [1] "%like%"            "a"                 "copy"             
-    ##  [4] "dfr"               "employees"         "f"                
-    ##  [7] "large"             "lst"               "lu"               
-    ## [10] "mylist"            "myss"              "overtimers"       
-    ## [13] "overtimers_static" "parcel"            "qw"               
-    ## [16] "rls"               "rls2"              "rptbl"            
-    ## [19] "rs"                "rs2"               "rsd"              
-    ## [22] "rsl"               "rss"               "rvec"             
-    ## [25] "ss"                "sy"                "top4"             
-    ## [28] "vec"
-
     rs
 
     ##   x1 alpha
@@ -260,11 +225,11 @@ The connection also works the other way, if you change `rs`.
     dfr
 
     ##   x1          x2 alpha
-    ## 1  1  1.66438341     A
-    ## 2  2  0.22368829     B
-    ## 3  3  0.05421969     C
-    ## 4  4 -0.55446755     y
-    ## 5  5 -0.45012338     z
+    ## 1  1  0.73700545     A
+    ## 2  2 -2.34770492     B
+    ## 3  3  0.08771079     C
+    ## 4  4  0.97882252     y
+    ## 5  5 -0.98406769     z
 
 Everything that you do to `rs` will be reflected in the original data,
 and vice versa. Well, almost everything: remember that `rs` refers to a
@@ -291,8 +256,6 @@ three standard ways to subset data: `$`, `[[` and `[`.
     rvec
 
     ## [1] 2 3
-    ## attr(,".refset.")
-    ## [1] TRUE
 
     c(rls, rls2)
 
@@ -325,9 +288,9 @@ to data frame columns by name directly.
     large
 
     ##   x1         x2 alpha
-    ## 1  1 1.66438341     A
-    ## 2  2 0.22368829     B
-    ## 3  3 0.05421969     C
+    ## 1  1 0.73700545     A
+    ## 3  3 0.08771079     C
+    ## 4  4 0.97882252     y
 
 Notice that we've included an empty argument. This is just the same as
 when you call `dfr[dfr$x2 > 0, ]` with an empty argument after the
@@ -430,11 +393,11 @@ employees:
     f(parcel)
     employees
 
-    ##   id                 name age gender hours   pay
-    ## 1  1        James the Kid  28      M   135 60000
-    ## 2  2      Sylvia the Fair  44      F     0 55000
-    ## 3  3 Meng Qi the Terrible  38      F    70 70000
-    ## 4  4                 Luis  23      M     0 66000
+    ##   id              name age gender hours   pay
+    ## 1  1     James the Kid  28      M   135 60000
+    ## 2  2 Sylvia the Silent  44      F     0 55000
+    ## 3  3  Meng Qi the Fair  38      F    70 70000
+    ## 4  4              Luis  23      M     0 66000
 
 As the above shows, you can assign to `contents(parcel)` as well as read
 from it. You can also create a new variable from the parcel by using
@@ -448,39 +411,21 @@ from it. You can also create a new variable from the parcel by using
     f(parcel)
     employees
 
-    ##   id                              name age gender hours   pay
-    ## 1  1          James the Kid the Silent  28      M   135 60000
-    ## 2  2        Sylvia the Fair the Silent  44      F     0 55000
-    ## 3  3 Meng Qi the Terrible the Terrible  38      F    70 70000
-    ## 4  4                              Luis  23      M     0 66000
+    ##   id                         name age gender hours   pay
+    ## 1  1       James the Kid the Fair  28      M   135 60000
+    ## 2  2 Sylvia the Silent the Silent  44      F     0 55000
+    ## 3  3     Meng Qi the Fair the Kid  38      F    70 70000
+    ## 4  4                         Luis  23      M     0 66000
 
 There is a shorthand function to create a wrapped refset, called
 (unsurprisingly) wrapset.
 
-    parcel <- wrapset(employees, grepl("Terrible", employees$name), )
+    parcel <- wrapset(employees, grepl("Terrible", employees$name), , drop=FALSE)
+    # note: drop=FALSE works just as for standard subsetting, see ?Extract
     contents(parcel)
 
-    ## $id
-    ## [1] 3
-    ## 
-    ## $name
-    ## [1] "Meng Qi the Terrible the Terrible"
-    ## 
-    ## $age
-    ## [1] 38
-    ## 
-    ## $gender
-    ## [1] F
-    ## Levels: F M
-    ## 
-    ## $hours
-    ## [1] 70
-    ## 
-    ## $pay
-    ## [1] 70000
-    ## 
-    ## attr(,".refset.")
-    ## [1] TRUE
+    ## [1] id     name   age    gender hours  pay   
+    ## <0 rows> (or 0-length row.names)
 
 Using parcels is a way to pass references around code. You could also do
 this using non-standard evaluation

@@ -10,12 +10,17 @@ insists on is.name of its first argument?)
 
 way to not set .refset. attribute?
 
-do you need parcel? One possibility: parcel() should be more generally a 
-way of passing around activeBindings, which remember their environment.
+shall I just skip the refset attribute?
 
-Note: pryr can do stuff like:
-foo %<a-% if (missing(value)) dfr[1,] else dfr[1,] <<- value
- But I think yours is probably easier.
+BUG:
+parcel <- wrap(rs)
+contents(parcel) <- xxx
+rs not being updated. wrapset() works.
+but this is because it actually calls refset with the right environment.
+You can't pass refsets as args... even to wrap!
+
+BUG 2:
+weird failures in tests from testthat...
 "
 
 # would like this to work but it doesn't at the mo:
