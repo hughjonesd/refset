@@ -310,7 +310,7 @@ contents <- function(parcel) {
 #' @rdname contents
 `contents<-` <- function(parcel, value) {
   stopifnot(is.parcel(parcel))
-  expr2 <- substitute(expr <- value)
+  expr2 <- bquote(expr <- .(value))
   eval(expr2, parcel)
   parcel
 }
@@ -333,7 +333,13 @@ contents <- function(parcel) {
 unwrap_as <- function(x, parcel, env=parent.frame()) {
   stopifnot(is.parcel(parcel))
   x <- deparse(substitute(x))
-  f <- function(val) if (missing(val)) contents(parcel) else contents(parcel) <- val
+  f <- function(val) {
+    if (missing(val)) {
+      contents(parcel) 
+    } else {
+      contents(parcel) <- val  
+    }
+  }
   if (exists(x, where=env, inherits=FALSE)) rm(list=x, pos=env)
   makeActiveBinding(x, f, env=env) 
 }
