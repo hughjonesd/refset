@@ -318,7 +318,7 @@ rs %r% employees[1:3,]
 
 As the above shows, you can assign to `contents(parcel)` as well as read from it.
 You can also create a new variable from the parcel by using `unwrap_as`. Another
-way to write the function above would be:
+way to write the function above would be: 
 
 ```{r}
 f <- function(parcel) {
