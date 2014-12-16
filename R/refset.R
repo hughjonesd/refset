@@ -56,6 +56,7 @@ weird failures in tests from testthat...
 #' @seealso
 #' Refsets are implemented using \code{makeActiveBinding}.
 #' 
+#' @aliases `%r%`
 #' @family parcel
 #' 
 #' @examples
@@ -182,14 +183,13 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 
 #' @export
 #' @rdname refset
-`%r%` <- refset
+# `%r%` <- refset
 # the broken way to do it, helps pass cran checks, needs new argument to refset
-# `%r%` <- function(x, data) {
-#   data <- substitute(data)
-#   str(data)
-#   refset(substitute(x), data, eval.env=parent.frame(), 
-#         assign.env=parent.frame())
-# }
+`%r%` <- function(x, data) {
+  mc <- match.call()
+  mc[[1]] <- quote(refset)
+  eval(mc, parent.frame())
+}
 
 #' Wrap an expression and its environment into a parcel.
 #' 

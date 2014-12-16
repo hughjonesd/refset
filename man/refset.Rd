@@ -2,6 +2,7 @@
 % Please edit documentation in R/refset.R
 \name{refset}
 \alias{\%r\%}
+\alias{`\%r\%`}
 \alias{refset}
 \title{Create a reference to a subset of an object}
 \usage{
