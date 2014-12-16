@@ -11,4 +11,4 @@ Description: Provides subsets with reference semantics, i.e. subsets
 License: GPL-2
 NeedsCompilation: no
 VignetteBuilder: knitr
-Suggests: knitr, rmarkdown
+Suggests: knitr, rmarkdown, testthat

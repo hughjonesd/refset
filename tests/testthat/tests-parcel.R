@@ -27,6 +27,8 @@ test_that("wrapping arbitrary expressions works", {
   pcl <- wrap(x^3)
   x <- 2
   expect_equivalent(contents(pcl), 8)
+  x <- 3
+  expect_equivalent(contents(pcl), 27)
 })
 
 test_that("unwrap_as works", {
@@ -43,5 +45,6 @@ test_that("assigning to contents works", {
   pcl <- wrapset(abc,)
   contents(pcl) <- letters[24:26]
   expect_equivalent(abc, letters[24:26])
+  expect_equivalent(contents(pcl), letters[24:26])
 })
 
