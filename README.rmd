@@ -11,8 +11,9 @@ vignette: >
 
 [![Build Status](https://travis-ci.org/hughjonesd/refset.svg?branch=master)](https://travis-ci.org/hughjonesd/refset)
 
-# refset
-# The skinny
+# refset - subsets with reference semantics
+
+## The skinny
 
 ### Installation
 

@@ -1,10 +1,10 @@
 [![Build Status](https://travis-ci.org/hughjonesd/refset.svg?branch=master)](https://travis-ci.org/hughjonesd/refset)
 
-refset
-======
+refset - subsets with reference semantics
+=========================================
 
 The skinny
-==========
+----------
 
 ### Installation
 
@@ -156,11 +156,11 @@ f(parcel)
 employees
 ```
 
-    ##    id               name age gender
-    ## 1 101 Jimmy the Terrible  30      M
-    ## 2 102  Silvia the Silent  46      F
-    ## 3   3   Meng Qi the Fair  39      F
-    ## 4   4               Luis  24      M
+    ##    id                 name age gender
+    ## 1 101     Jimmy the Silent  30      M
+    ## 2 102    Silvia the Silent  46      F
+    ## 3   3 Meng Qi the Terrible  39      F
+    ## 4   4                 Luis  24      M
 
 Introduction
 ------------
@@ -267,12 +267,12 @@ rs
 dfr
 ```
 
-    ##   x1         x2 alpha
-    ## 1  1 -1.2665087     A
-    ## 2  2  0.2353092     B
-    ## 3  3 -1.4596021     C
-    ## 4  4 -1.9721436     y
-    ## 5  5 -0.7567139     z
+    ##   x1           x2 alpha
+    ## 1  1  0.002267611     A
+    ## 2  2 -0.500830566     B
+    ## 3  3  0.033312088     C
+    ## 4  4 -0.788833951     y
+    ## 5  5  0.137205399     z
 
 Everything that you do to `rs` will be reflected in the original data, and vice versa. Well, almost everything: remember that `rs` refers to a *subset* of the data. If you can't do it to a subset, you probably can't do it to a refset. For example, changing the `names` of a refset doesn't work, because assigning to the names of a subset of your data doesn't change the original names.
 
@@ -325,14 +325,10 @@ refset(large, dfr, x2 > 0,)
 large
 ```
 
-    ## $x1
-    ## [1] 2
-    ## 
-    ## $x2
-    ## [1] 0.2353092
-    ## 
-    ## $alpha
-    ## [1] "B"
+    ##   x1          x2 alpha
+    ## 1  1 0.002267611     A
+    ## 3  3 0.033312088     C
+    ## 5  5 0.137205399     z
 
 Notice that we've included an empty argument. This is just the same as when you call `dfr[dfr$x2 > 0, ]` with an empty argument after the comma: it includes all the columns.
 
@@ -428,11 +424,11 @@ f(parcel)
 employees
 ```
 
-    ##   id                name age gender hours   pay
-    ## 1  1    James the Silent  28      M   135 60000
-    ## 2  2 Sylvia the Terrible  44      F     0 55000
-    ## 3  3    Meng Qi the Fair  38      F    70 70000
-    ## 4  4                Luis  23      M     0 66000
+    ##   id            name age gender hours   pay
+    ## 1  1  James the Fair  28      M   135 60000
+    ## 2  2  Sylvia the Kid  44      F     0 55000
+    ## 3  3 Meng Qi the Kid  38      F    70 70000
+    ## 4  4            Luis  23      M     0 66000
 
 As the above shows, you can assign to `contents(parcel)` as well as read from it. You can also create a new variable from the parcel by using `unwrap_as`. Another way to write the function above would be:
 
@@ -446,11 +442,11 @@ f(parcel)
 employees
 ```
 
-    ##   id                           name age gender hours   pay
-    ## 1  1       James the Silent the Kid  28      M   135 60000
-    ## 2  2 Sylvia the Terrible the Silent  44      F     0 55000
-    ## 3  3  Meng Qi the Fair the Terrible  38      F    70 70000
-    ## 4  4                           Luis  23      M     0 66000
+    ##   id                      name age gender hours   pay
+    ## 1  1 James the Fair the Silent  28      M   135 60000
+    ## 2  2 Sylvia the Kid the Silent  44      F     0 55000
+    ## 3  3  Meng Qi the Kid the Fair  38      F    70 70000
+    ## 4  4                      Luis  23      M     0 66000
 
 There is a shorthand function to create a wrapped refset, called (unsurprisingly) wrapset.
 
@@ -460,9 +456,8 @@ parcel <- wrapset(employees, grepl("Terrible", employees$name), , drop=FALSE)
 contents(parcel)
 ```
 
-    ##   id                           name age gender hours   pay
-    ## 2  2 Sylvia the Terrible the Silent  44      F     0 55000
-    ## 3  3  Meng Qi the Fair the Terrible  38      F    70 70000
+    ## [1] id     name   age    gender hours  pay   
+    ## <0 rows> (or 0-length row.names)
 
 Using parcels is a way to pass references around code. You could also do this using non-standard evaluation ([NSE](http://adv-r.had.co.nz/Computing-on-the-language.html)). Parcels have the nice feature that they store the environment where they should be evaluated.
 
