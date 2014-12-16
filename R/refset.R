@@ -193,8 +193,6 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 #' 
 #' @param expr an R expression
 #' @param env environment in which \code{expr} is to be evaluated
-#' @param eval. evaluate \code{expr} (in the calling environment, not \code{env})
-#'        before storing it
 #' @return
 #' An object of class 'parcel', with components \code{expr} and \code{env}.
 #' 
@@ -214,20 +212,12 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 #' f <- function(parcel) {x <- 10; contents(parcel)}
 #' f(parcel)
 #' 
-#' expr <- quote(foo)
-#' p1 <- wrap(expr)
-#' p2 <- wrap(expr, eval.=TRUE)
-#' foo <- "foo!"
-#' expr <- "bar!"
-#' contents(p1)
-#' contents(p2)
 #' @export
-wrap <- function(expr, env=parent.frame(), eval.=FALSE) {
+wrap <- function(expr, env=parent.frame()) {
   stopifnot(is.environment(env))
   parcel <- new.env(parent=env) # is parent=env necessary?
   parcel$env <- env
   expr <- match.call()$expr
-  if (eval.) expr <- eval(expr, parent.frame())
   parcel$expr <- expr
   class(parcel) <- c("parcel", class(parcel))
   parcel
