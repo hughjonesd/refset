@@ -5,74 +5,9 @@
 Should I make rs %r% dfr or refset(rs, dfr) work without extra commas?
 If so, it has to take the real semantics of dfr, not dfr[] ...
 
-make is.refset() work for e.g. parcel$ref ... (how? is.refset has env argument? and
-insists on is.name of its first argument?)
-
-way to not set .refset. attribute?
-
-shall I just skip the refset attribute?
-
 BUG:
-parcel <- wrap(rs)
-contents(parcel) <- xxx
-rs not being updated. wrapset() works.
-but this is because it actually calls refset with the right environment.
-You can't pass refsets as args... even to wrap!
-
-BUG 2:
 weird failures in tests from testthat...
 "
-
-# would like this to work but it doesn't at the mo:
-# dfr <- data.frame(a=1:2, b=1:2)
-# refset(rs, dfr,)
-# names(rs) <- c("c", "d")
-# similarly with rownames() etc...
-#
-# Observe:
-# > dfr <- data.frame(a=3:4, b=5:6)
-# > refset(rs, dfr,,)
-#   a b
-# 1 3 5
-# 2 4 6
-# > `length<-`(rs, 1)
-# $a
-# [1] 3 4
-# 
-# > rs
-#   a b
-# 1 3 5
-# 2 4 6
-# > length(rs) <- 1
-# > rs
-#   a b
-# 1 3 3
-# 2 4 4
-#
-# why this happens:
-# the call evaluates to `length<-`(rs, 1)
-# this returns a 1-length version of dfr, i.e. just dfr$a
-# the result is automatically assigned to rs
-# but we haven't really changed the length of dfr
-# so we get the repetition
-# if you do e.g. names(x)[1] <- "jim"
-# then names(x) is called, the first component of the result is replaced by "jim"
-# and the result is passed to `names<-` ... then the result is assigned to 
-# x. Like so:
-#
-# tmp <- names(x)[1]
-# x <- `names<-`(x, tmp)
-#
-# at the moment, the first x will give you the relevant names. Fine.
-# the result of the `names<-` call will also be what you want.
-# but the evaluation will give you a subset.
-# arguably behaviour for names is correct, since if you call e.g.
-# names(dfr[1:2,]) you don't affect the names of dfr.
-# similarly for length:
-# vec <- 1:10
-# length(vec[1:5]) <- 2 # 1 2 1 2 1 6 7 8 9 10
-# even if you do refset(rs, vec,) you are implicitly creating a 
-# reference to vec[]... and again, length(vec[]) does not change the length...
 
 #' Create a reference to a subset of an object
 #' 
