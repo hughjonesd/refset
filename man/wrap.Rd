@@ -9,6 +9,10 @@ wrap(expr, env = parent.frame(), quote = TRUE)
 \item{expr}{an R expression}
 
 \item{env}{environment in which \code{expr} is to be evaluated}
+
+\item{quote}{whether \code{expr} should be quoted.
+If this is \code{FALSE}, \code{expr} will be evaluated
+before being stored.}
 }
 \value{
 An object of class 'parcel', with components \code{expr} and \code{env}.

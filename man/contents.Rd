@@ -14,13 +14,28 @@ contents(parcel) <- value
 \item{value}{a value to assign}
 }
 \value{
-The result of evaluating the expression stored in the parcel. For \code{contents<-}, the parcel itself.
+The result of evaluating the expression stored in the parcel.
+For \code{contents<-}, the parcel itself.
+
+If the contents of parcel is not a \code{refset}, typically \code{contents<-}
+will simply assign a static value into the parcel.
 }
 \description{
 \code{contents} returns the value of the parcel contents by evaluating
 the expression in the parcel. \code{contents<-} attempts to assign
 to the expression, which will only work if the expression is appropriate, e.g.
 a refset.
+}
+\examples{
+pcl <- wrap(x^2)
+x <- 2
+contents(pcl)
+x <- 3
+contents(pcl)
+contents(pcl) <- x^2
+contents(pcl)
+x <- 2
+contents(pcl) # 9 not 4
 }
 \seealso{
 Other wrapping functions: \code{\link{is.parcel}};

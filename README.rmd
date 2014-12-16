@@ -81,14 +81,6 @@ employees$age <- employees$age + 1
 rsd
 ```
 
-### But you can turn this off
-```{r}
-refset(rss, employees, age < 40, , dyn.idx=FALSE)
-rss
-employees$age <- employees$age + 1
-rss
-```
-
 ### You can refset any subsettable object...
 ```{r}
 vec <- 1:10

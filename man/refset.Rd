@@ -46,12 +46,13 @@ is changed too.
 \details{
 There are two ways to call \code{refset}. The two-argument form, e.g.
 \code{refset(myref, mydata[rows,"column"])}, creates a reference to the
-subset of \code{mydata} passed in the second argument. The three-or-more
-argument form acts like the \code{\link{subset}} function: the indices in
-\code{...} are applied to \code{data}. If \code{data} is a data.frame, then
-the indices are interpreted within it, so you can refer to columns directly:
-\code{refset(myref, mydata, a>1 & b<a,)}. Bare column names must be quoted,
-however.
+subset of \code{mydata} passed in the second argument.
+
+The three-or-more argument form acts like the \code{\link{subset}} function:
+the indices in \code{...} are applied to \code{data}. If \code{data} is a
+data.frame, then the indices are interpreted within it, so you can refer to
+columns directly: \code{refset(myref, mydata, a>1 & b<a,)}. Bare column names
+must be quoted, however.
 
 Empty arguments in \code{...} are allowed and are treated as indexing
 the whole dimension, just as in \code{\link{Extract}}.
@@ -108,7 +109,7 @@ rs
 rs # different
 
 # Non-readonly refset with other functions. Works but gives a warning:
-dontrun{
+\dontrun{
 vec <- 1:5
 refset(ssv, names(vec), read.only=FALSE)
 ssv <- LETTERS[1:5]
