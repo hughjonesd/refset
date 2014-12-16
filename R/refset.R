@@ -228,13 +228,11 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
     if (missing(v)) {
       args <- c(data, idxval)
       if (length(idxval) > 1) args <- c(args, drop=drop)
-      res <- do.call(ssarg, args, envir=env)
-      if (! is.null(res)) attr(res, ".refset.") <- TRUE
-      res
+      do.call(ssarg, args, envir=env)
     } else {
       if (read.only) stop("Tried to assign to a readonly refset")
       do.call("<-", list(data, do.call(assignarg, c(data, idxval, 
-        list(value=v)), envir=env)), envir=env)
+            list(value=v)), envir=env)), envir=env)
     }
   }
   
@@ -255,9 +253,6 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 #' 
 #' @param expr an R expression
 #' @param env environment in which \code{expr} is to be evaluated
-#' @param quote whether \code{expr} should be quoted.
-#'        If this is \code{FALSE}, \code{expr} will be evaluated 
-#'        before being stored.
 #' @return
 #' An object of class 'parcel', with components \code{expr} and \code{env}.
 #' 
@@ -278,12 +273,11 @@ refset <- function(x, data, ..., drop=TRUE, dyn.idx=TRUE, read.only=FALSE,
 #' f(parcel)
 #' 
 #' @export
-wrap <- function(expr, env=parent.frame(), quote=TRUE) {
+wrap <- function(expr, env=parent.frame()) {
   stopifnot(is.environment(env))
   parcel <- new.env(parent=env) # is parent=env necessary?
   parcel$env <- env
   expr <- match.call()$expr
-  if (! quote) expr <- eval(expr, env)
   parcel$expr <- expr
   class(parcel) <- c("parcel", class(parcel))
   parcel
@@ -344,8 +338,8 @@ is.parcel <- function(x) inherits(x, "parcel")
 #' @return The result of evaluating the expression stored in the parcel. 
 #' For \code{contents<-}, the parcel itself.
 #' 
-#' If the contents of parcel is not a \code{refset}, typically \code{contents<-}
-#' will simply assign a static value into the parcel.
+#' \code{contents<-} will only work if the expression wrapped in the
+#' parcel can accept assignments.
 #' 
 #' @examples
 #' pcl <- wrap(x^2)
@@ -353,10 +347,12 @@ is.parcel <- function(x) inherits(x, "parcel")
 #' contents(pcl)
 #' x <- 3
 #' contents(pcl)
-#' contents(pcl) <- x^2
-#' contents(pcl)
-#' x <- 2
-#' contents(pcl) # 9 not 4
+#' \dontrun{
+#' contents(pcl) <- 4 # fails
+#' }
+#' p2 <- wrap(names(x))
+#' contents(p2) <- "named"
+#' x
 #' 
 #' @family wrapping functions
 contents <- function(parcel) {
@@ -368,8 +364,10 @@ contents <- function(parcel) {
 #' @rdname contents
 `contents<-` <- function(parcel, value) {
   stopifnot(is.parcel(parcel))
-  expr2 <- bquote(expr <- .(value))
-  eval(expr2, parcel)
+  parcel$value <- value
+  expr2 <- substitute(expr <- value, parcel)
+  eval(expr2, parcel$env)
+  rm("value", pos=parcel)
   parcel
 }
 
