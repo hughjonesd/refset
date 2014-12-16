@@ -1,4 +1,19 @@
 
+
+#' Subsets with Reference Semantics
+#'
+#' Refset provides subsets with reference semantics, i.e. subsets
+#' which automatically reflect changes in the original object, and which
+#' also update the original object when they are changed.
+#' 
+#' For more info see \code{vignette('refset')}.
+#' @name refset-package
+#' @docType package
+#' @title Subsets with Reference Semantics
+#' @author David Hugh-Jones \email{davidhughjones@@gmail.com}
+#' @keywords package
+NULL
+
 # TODO/IDEAS:
 
 "
