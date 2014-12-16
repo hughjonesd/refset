@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.org/hughjonesd/refset.svg?branch=master)](https://travis-ci.org/hughjonesd/refset)
+
+refset
+======
+
 The skinny
 ==========
 
@@ -151,11 +156,11 @@ f(parcel)
 employees
 ```
 
-    ##    id            name age gender
-    ## 1 101  Jimmy the Fair  30      M
-    ## 2 102 Silvia the Fair  46      F
-    ## 3   3 Meng Qi the Kid  39      F
-    ## 4   4            Luis  24      M
+    ##    id               name age gender
+    ## 1 101 Jimmy the Terrible  30      M
+    ## 2 102  Silvia the Silent  46      F
+    ## 3   3   Meng Qi the Fair  39      F
+    ## 4   4               Luis  24      M
 
 Introduction
 ------------
@@ -263,11 +268,11 @@ dfr
 ```
 
     ##   x1         x2 alpha
-    ## 1  1 -0.5061173     A
-    ## 2  2  0.5387420     B
-    ## 3  3 -0.1424322     C
-    ## 4  4  0.1438598     y
-    ## 5  5  0.7107470     z
+    ## 1  1 -1.2665087     A
+    ## 2  2  0.2353092     B
+    ## 3  3 -1.4596021     C
+    ## 4  4 -1.9721436     y
+    ## 5  5 -0.7567139     z
 
 Everything that you do to `rs` will be reflected in the original data, and vice versa. Well, almost everything: remember that `rs` refers to a *subset* of the data. If you can't do it to a subset, you probably can't do it to a refset. For example, changing the `names` of a refset doesn't work, because assigning to the names of a subset of your data doesn't change the original names.
 
@@ -320,10 +325,14 @@ refset(large, dfr, x2 > 0,)
 large
 ```
 
-    ##   x1        x2 alpha
-    ## 2  2 0.5387420     B
-    ## 4  4 0.1438598     y
-    ## 5  5 0.7107470     z
+    ## $x1
+    ## [1] 2
+    ## 
+    ## $x2
+    ## [1] 0.2353092
+    ## 
+    ## $alpha
+    ## [1] "B"
 
 Notice that we've included an empty argument. This is just the same as when you call `dfr[dfr$x2 > 0, ]` with an empty argument after the comma: it includes all the columns.
 
@@ -419,11 +428,11 @@ f(parcel)
 employees
 ```
 
-    ##   id               name age gender hours   pay
-    ## 1  1 James the Terrible  28      M   135 60000
-    ## 2  2  Sylvia the Silent  44      F     0 55000
-    ## 3  3 Meng Qi the Silent  38      F    70 70000
-    ## 4  4               Luis  23      M     0 66000
+    ##   id                name age gender hours   pay
+    ## 1  1    James the Silent  28      M   135 60000
+    ## 2  2 Sylvia the Terrible  44      F     0 55000
+    ## 3  3    Meng Qi the Fair  38      F    70 70000
+    ## 4  4                Luis  23      M     0 66000
 
 As the above shows, you can assign to `contents(parcel)` as well as read from it. You can also create a new variable from the parcel by using `unwrap_as`. Another way to write the function above would be:
 
@@ -437,11 +446,11 @@ f(parcel)
 employees
 ```
 
-    ##   id                         name age gender hours   pay
-    ## 1  1  James the Terrible the Fair  28      M   135 60000
-    ## 2  2 Sylvia the Silent the Silent  44      F     0 55000
-    ## 3  3  Meng Qi the Silent the Fair  38      F    70 70000
-    ## 4  4                         Luis  23      M     0 66000
+    ##   id                           name age gender hours   pay
+    ## 1  1       James the Silent the Kid  28      M   135 60000
+    ## 2  2 Sylvia the Terrible the Silent  44      F     0 55000
+    ## 3  3  Meng Qi the Fair the Terrible  38      F    70 70000
+    ## 4  4                           Luis  23      M     0 66000
 
 There is a shorthand function to create a wrapped refset, called (unsurprisingly) wrapset.
 
@@ -451,8 +460,9 @@ parcel <- wrapset(employees, grepl("Terrible", employees$name), , drop=FALSE)
 contents(parcel)
 ```
 
-    ##   id                        name age gender hours   pay
-    ## 1  1 James the Terrible the Fair  28      M   135 60000
+    ##   id                           name age gender hours   pay
+    ## 2  2 Sylvia the Terrible the Silent  44      F     0 55000
+    ## 3  3  Meng Qi the Fair the Terrible  38      F    70 70000
 
 Using parcels is a way to pass references around code. You could also do this using non-standard evaluation ([NSE](http://adv-r.had.co.nz/Computing-on-the-language.html)). Parcels have the nice feature that they store the environment where they should be evaluated.
 

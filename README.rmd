@@ -1,5 +1,5 @@
 ---
-title: "refset"
+title: "refset - subsets with reference semantics"
 author: "David Hugh-Jones"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,7 +9,9 @@ vignette: >
   %\usepackage[utf8]{inputenc}
 ---
 
+[![Build Status](https://travis-ci.org/hughjonesd/refset.svg?branch=master)](https://travis-ci.org/hughjonesd/refset)
 
+# refset
 # The skinny
 
 ### Installation
