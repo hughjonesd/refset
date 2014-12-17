@@ -6,6 +6,9 @@
 ### Installation
 
 ```r
+# stable version from CRAN:
+install.packages("refset")
+# development version from github:
 library(devtools)
 install_github("hughjonesd/refset")
 ```
