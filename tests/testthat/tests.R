@@ -262,6 +262,36 @@ test_that("complex two-argument forms work", {
   expect_equivalent(ss2, dfr[c(1,3), c("a", "c")])
   ss2 <- 10
   expect_equivalent(dfr$a, c(10, 3, 10, 1))
+  
+  lst <- list(dfr=data.frame(a=1:2, b=1:2))
+  refset(rs, lst$dfr,,)
+  expect_equivalent(rs$a, 1:2)
+  lst$dfr$a <- 3:4
+  expect_equivalent(rs$a, 3:4)
+
+  skip("Assignment to a list component of a list component is failing")
+  rs$a <- 1:2
+  expect_equivalent(lst$dfr$a, 1:2)
+  # breaks, why?
+  # call becomes rs <- `$<-`(rs, "a", 1:2) ... which is fine if called explicitly
+  # first rs is evaluated on the RHS and the LHS. Each time it returns
+  # its value, so you get: lst$dfr <- `$<-` (lst$dfr, "a", 1:2)
+  
+  #   L[[2]][3] <- 1
+  #   
+  #    equivalent to
+  #   
+  #   `*tmp*` <- L
+  #   L<-`[[<-`(`*tmp*`,b[1]<-1,value=   `[<-`(`*tmp*`[[ b[1] ]],3,value=1))
+  #   rm(`*tmp*`)
+  
+  #   rs$a <- 1:2
+  #   
+  #    equivalent to
+  #   
+  #   `*tmp*` <- rs
+  #   rs<-`[[<-`(rs,b[1]<-1,value=   `$<-`(rs,3,value=1))
+  #   rm(`*tmp*`)
 })
 
 test_that("changing nrow of original object works", {
