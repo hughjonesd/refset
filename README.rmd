@@ -7,5 +7,5 @@ output: rmarkdown::html_document
 
 [![Build Status](https://travis-ci.org/hughjonesd/refset.svg?branch=master)](https://travis-ci.org/hughjonesd/refset)
 
-```{r child='vignettes/README-child.rmd'}
+```{r child='vignettes/README-child'}
 ```
