@@ -1,3 +1,4 @@
+
 [![Build Status](https://travis-ci.org/hughjonesd/refset.svg?branch=master)](https://travis-ci.org/hughjonesd/refset)
 
 The skinny
@@ -156,11 +157,11 @@ f(parcel)
 employees
 ```
 
-    ##    id                name age gender
-    ## 1 101    Jimmy the Silent  30      M
-    ## 2 102 Silvia the Terrible  46      F
-    ## 3   3    Meng Qi the Fair  39      F
-    ## 4   4        Luis the Kid  24      M
+    ##    id                 name age gender
+    ## 1 101   Jimmy the Terrible  30      M
+    ## 2 102      Silvia the Fair  46      F
+    ## 3   3 Meng Qi the Terrible  39      F
+    ## 4   4      Luis the Silent  24      M
 
 Introduction
 ------------
@@ -268,11 +269,11 @@ dfr
 ```
 
     ##   x1         x2 alpha
-    ## 1  1 -0.7017122     A
-    ## 2  2 -1.7185365     B
-    ## 3  3  0.1662044     C
-    ## 4  4 -0.7392338     y
-    ## 5  5  0.1778944     z
+    ## 1  1 -0.7411191     A
+    ## 2  2 -0.1082759     B
+    ## 3  3  0.1954485     C
+    ## 4  4 -0.5963817     y
+    ## 5  5  0.3462606     z
 
 Everything that you do to `rs` will be reflected in the original data, and vice versa. Well, almost everything: remember that `rs` refers to a *subset* of the data. If you can't do it to a subset, you probably can't do it to a refset. For example, changing the `names` of a refset doesn't work, because assigning to the names of a subset of your data doesn't change the original names.
 
@@ -326,8 +327,8 @@ large
 ```
 
     ##   x1        x2 alpha
-    ## 3  3 0.1662044     C
-    ## 5  5 0.1778944     z
+    ## 3  3 0.1954485     C
+    ## 5  5 0.3462606     z
 
 Notice that we've included an empty argument. This is just the same as when you call `dfr[dfr$x2 > 0, ]` with an empty argument after the comma: it includes all the columns.
 
@@ -423,11 +424,11 @@ f(parcel)
 employees
 ```
 
-    ##   id            name age gender hours   pay
-    ## 1  1  James the Fair  28      M   135 60000
-    ## 2  2  Sylvia the Kid  44      F     0 55000
-    ## 3  3 Meng Qi the Kid  38      F    70 70000
-    ## 4  4    Luis the Kid  23      M     0 66000
+    ##   id                name age gender hours   pay
+    ## 1  1      James the Fair  28      M   135 60000
+    ## 2  2 Sylvia the Terrible  44      F     0 55000
+    ## 3  3  Meng Qi the Silent  38      F    70 70000
+    ## 4  4        Luis the Kid  23      M     0 66000
 
 As the above shows, you can assign to `contents(parcel)` as well as read from it. You can also create a new variable from the parcel by using `unwrap_as`. Another way to write the function above would be:
 
@@ -441,11 +442,11 @@ f(parcel)
 employees
 ```
 
-    ##   id                        name age gender hours   pay
-    ## 1  1 James the Fair the Terrible  28      M   135 60000
-    ## 2  2      Sylvia the Kid the Kid  44      F     0 55000
-    ## 3  3    Meng Qi the Kid the Fair  38      F    70 70000
-    ## 4  4     Luis the Kid the Silent  23      M     0 66000
+    ##   id                         name age gender hours   pay
+    ## 1  1  James the Fair the Terrible  28      M   135 60000
+    ## 2  2 Sylvia the Terrible the Fair  44      F     0 55000
+    ## 3  3   Meng Qi the Silent the Kid  38      F    70 70000
+    ## 4  4      Luis the Kid the Silent  23      M     0 66000
 
 Using parcels is a way to pass references around code. You could also do this using non-standard evaluation ([NSE](http://adv-r.had.co.nz/Computing-on-the-language.html)). Parcels have the nice feature that they store the environment where they should be evaluated.
 
